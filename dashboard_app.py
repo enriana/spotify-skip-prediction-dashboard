@@ -126,7 +126,8 @@ def load_data():
 X_train, X_test, y_train, y_test, feature_names, df_cleaned = load_data()
 
 st.sidebar.header("Navigate Dashboard")
-section = st.sidebar.radio("Go to", ['Key Performance Metrics', 'EDA Insights', 'Summary of Key Insights', 'Business Recommendations', 'Predictive Model Evaluation'])
+# Removed 'Key Performance Metrics' from the radio options
+section = st.sidebar.radio("Go to", ['EDA Insights', 'Summary of Key Insights', 'Business Recommendations', 'Predictive Model Evaluation'])
 
 
 # --- Calculate Variables for EDA Visualizations ---
@@ -197,59 +198,32 @@ if section in ['EDA Insights', 'Summary of Key Insights', 'Business Recommendati
 # --- Display Sections Based on Navigation ---
 
 if section == 'Key Performance Metrics':
-    st.header('Key Performance Metrics')
-    st.write("Overview of key statistics and model performance.")
+    # This section is removed as per user request to be included in EDA Insights
+    pass # Keep this pass statement or remove the entire if block
 
-    # Calculate additional metrics
+
+elif section == 'EDA Insights':
+    st.header('Exploratory Data Analysis (EDA) Insights')
+    st.write("Exploring patterns and factors related to track skips.")
+
+    # Calculate and display overall data metrics as scorecards within EDA Insights
     total_streams = len(df_cleaned)
     total_skipped = df_cleaned['skipped'].sum()
     overall_skip_rate = (total_skipped / total_streams) * 100 if total_streams > 0 else 0
     streaming_period_start = df_cleaned['ts'].min().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
     streaming_period_end = df_cleaned['ts'].max().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
 
-
     st.subheader('Overall Data Metrics')
-    st.metric("Total Streams Analyzed", f"{total_streams:,}")
-    st.metric("Overall Skip Rate", f"{overall_skip_rate:.2f}%")
-    st.metric("Streaming Period", f"{streaming_period_start} to {streaming_period_end}")
+    col1, col2, col3, col4 = st.columns(4) # Create 4 columns for scorecards
+    with col1:
+        st.metric("Total Streams", f"{total_streams:,}")
+    with col2:
+        st.metric("Total Skipped", f"{total_skipped:,}")
+    with col3:
+        st.metric("Overall Skip Rate", f"{overall_skip_rate:.2f}%")
+    with col4:
+        st.metric("Streaming Period", f"{streaming_period_start} to {streaming_period_end}")
 
-    st.subheader('Model Prediction Metrics (Tuned Random Forest)')
-    # Assume model evaluation metrics are available from the 'Predictive Model Evaluation' section
-    # You might need to train the model here or ensure these variables are passed/cached
-    # For simplicity, let's assume the tuned model metrics are calculated when 'Predictive Model Evaluation' is accessed
-    # Or train a simple model here just for these metrics display if needed
-    # Let's train a simple model for this section's metrics display
-    @st.cache_resource # Cache the model training
-    def train_simple_rf_model_for_metrics(X_train, y_train):
-        # Use default params or a simple set for quick calculation
-        simple_rf_model = RandomForestClassifier(random_state=42, class_weight='balanced')
-        simple_rf_model.fit(X_train, y_train)
-        return simple_rf_model
-
-    simple_model = train_simple_rf_model_for_metrics(X_train, y_train)
-    y_pred_simple = simple_model.predict(X_test)
-    accuracy_simple = accuracy_score(y_test, y_pred_simple)
-    # Precision for the positive class (True)
-    precision_simple = precision_score(y_test, y_pred_simple, pos_label=True)
-    # Recall for the positive class (True)
-    recall_simple = recall_score(y_test, y_pred_simple, pos_label=True)
-    # F1-score for the positive class (True)
-    f1_simple = f1_score(y_test, y_pred_simple, pos_label=True)
-
-
-    st.metric("Model Accuracy", f"{accuracy_simple:.4f}")
-    st.metric("Model Precision (Skipped=True)", f"{precision_simple:.4f}")
-    st.metric("Model Recall (Skipped=True)", f"{recall_simple:.4f}")
-    st.metric("Model F1-score (Skipped=True)", f"{f1_simple:.4f}")
-    # Note: "Prediction Reliability Score" isn't a standard single metric.
-    # Precision, Recall, F1-score, and AUC collectively indicate reliability.
-    # We'll highlight Recall for the minority class as it's often crucial for imbalance.
-    st.info("Recall (Skipped=True) is a key indicator of the model's ability to identify actual skips.")
-
-
-elif section == 'EDA Insights':
-    st.header('Exploratory Data Analysis (EDA) Insights')
-    st.write("Exploring patterns and factors related to track skips.")
 
     # Section: Skip Rate by Play Duration
     st.subheader('1. Skip Rate by Play Duration')
