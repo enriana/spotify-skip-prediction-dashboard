@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import numpy as np
 from PIL import Image # Import Pillow for image handling
 
-# Set Streamlit page configuration to wide mode
-st.set_page_config(layout="wide")
+# Set Streamlit page configuration to wide mode and light theme
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed", theme="light")
 
 # Set a visually appealing style for matplotlib plots, using green shades
 plt.style.use('seaborn-v0_8-whitegrid') # Start with a clean style
@@ -421,7 +421,7 @@ with col_model_eval:
 
     with model_viz_col1:
         st.subheader('Confusion Matrix')
-        fig_cm, ax_cm = plt.subplots(figsize=(5, 4)) # Further adjusted figure size
+        fig_cm, ax_cm = plt.subplots(figsize=(4.5, 3.5)) # Further adjusted figure size
         sns.heatmap(conf_matrix_tuned_rf, annot=True, fmt='d', cmap='Greens', ax=ax_cm, # Use Green cmap
                     xticklabels=['Not Skipped', 'Skipped'], yticklabels=['Not Skipped', 'Skipped'])
         ax_cm.set_xlabel('Predicted Label')
@@ -430,13 +430,12 @@ with col_model_eval:
         st.pyplot(fig_cm)
         plt.close(fig_cm)
 
-    with model_viz_col2:
         st.subheader('ROC Curve')
         y_proba_tuned_rf = tuned_rf_model.predict_proba(X_test)[:, 1] # Probability of the positive class (skipped=True)
         fpr, tpr, thresholds = roc_curve(y_test, y_proba_tuned_rf)
         auc_score = roc_auc_score(y_test, y_proba_tuned_rf)
 
-        fig_roc, ax_roc = plt.subplots(figsize=(5, 4)) # Further adjusted figure size
+        fig_roc, ax_roc = plt.subplots(figsize=(4.5, 3.5)) # Further adjusted figure size
         ax_roc.plot(fpr, tpr, label=f'AUC = {auc_score:.2f}', color='green') # Use green color
         ax_roc.plot([0, 1], [0, 1], 'k--', label='Random guess')
         ax_roc.set_xlabel('False Positive Rate')
@@ -446,24 +445,26 @@ with col_model_eval:
         st.pyplot(fig_roc)
         plt.close(fig_roc)
 
-    st.subheader('Feature Importances')
-    st.write("Top 10 influential features.") # Shortened description
 
-    # Get feature importances from the tuned model
-    importances = tuned_rf_model.feature_importances_
-    # Create a DataFrame for better visualization
-    feature_importances_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
-    # Sort by importance
-    feature_importances_df = feature_importances_df.sort_values('Importance', ascending=False).head(10) # Display top 10 for brevity in column
+    with model_viz_col2:
+        st.subheader('Feature Importances')
+        st.write("Top 10 influential features.") # Shortened description
 
-    fig_fi, ax_fi = plt.subplots(figsize=(8, 6)) # Adjusted figure size for single column
-    sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='Greens_r') # Use Green palette
-    ax_fi.set_title('Top 10 Feature Importances')
-    ax_fi.set_xlabel('Importance')
-    ax_fi.set_ylabel('Feature')
-    plt.tight_layout()
-    st.pyplot(fig_fi)
-    plt.close(fig_fi)
+        # Get feature importances from the tuned model
+        importances = tuned_rf_model.feature_importances_
+        # Create a DataFrame for better visualization
+        feature_importances_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+        # Sort by importance
+        feature_importances_df = feature_importances_df.sort_values('Importance', ascending=False).head(10) # Display top 10 for brevity in column
+
+        fig_fi, ax_fi = plt.subplots(figsize=(6, 5)) # Adjusted figure size for single column
+        sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='Greens_r') # Use Green palette
+        ax_fi.set_title('Top 10 Feature Importances')
+        ax_fi.set_xlabel('Importance')
+        ax_fi.set_ylabel('Feature')
+        plt.tight_layout()
+        st.pyplot(fig_fi)
+        plt.close(fig_fi)
 
 
 # --- End of App ---
