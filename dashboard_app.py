@@ -6,33 +6,76 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, roc_auc_score
 import numpy as np
+from PIL import Image # Import Pillow for image handling
 
-# Set a visually appealing style for matplotlib plots
-plt.style.use('seaborn-v0_8-whitegrid')
+# Set a visually appealing style for matplotlib plots, using green shades
+plt.style.use('seaborn-v0_8-whitegrid') # Start with a clean style
+plt.rcParams['axes.prop_cycle'] = plt.cycler('color', sns.color_palette("Greens_r", n_colors=6)) # Apply green color cycle
 
-# --- Inject custom CSS for sticky title ---
-# You might need to inspect the HTML structure of your specific Streamlit version
-# to find the exact class name for the title container.
-# The class name 'st-emotion-cache-e3fckw' is based on common Streamlit structures,
-# but it might vary slightly between versions.
-# If the sticky effect doesn't work, you may need to inspect the page source in your browser
-# to find the correct class name for the div containing your title.
+# --- Inject custom CSS for sticky title and green theme ---
 st.markdown("""
     <style>
+    /* Green theme */
+    .stApp {
+        background-color: #f0f4f0; /* Light green background */
+        color: #1e3a2d; /* Dark green text */
+    }
+    .css-1d3z3hw { /* Sidebar background */
+        background-color: #c8e6c9; /* Medium light green */
+    }
     .st-emotion-cache-e3fckw { /* Common class for the block containing the title */
         position: sticky;
         top: 0;
-        background-color: #ffffff; /* Match your app background if needed */
+        background-color: #f0f4f0; /* Match app background */
         z-index: 999; /* Ensure it stays on top of other content */
         padding-top: 1rem; /* Add some padding above the title */
         padding-bottom: 1rem; /* Add some padding below the title */
     }
+    h1 {
+        color: #004d40; /* Darker green for main headers */
+    }
+    h2, h3 {
+        color: #2e7d32; /* Medium green for subheaders */
+    }
+    .st-emotion-cache-gh2jqd { /* Markdown text */
+        color: #1e3a2d; /* Dark green */
+    }
+    .stButton>button {
+        background-color: #4caf50; /* Green button background */
+        color: white; /* White button text */
+        border-radius: 5px;
+    }
+    .stButton>button:hover {
+        background-color: #388e3c; /* Darker green on hover */
+        color: white;
+    }
+    .stRadio > label > div { /* Radio button label color */
+         color: #1e3a2d; /* Dark green */
+    }
+     .stRadio [data-baseweb=radio] [data-testid=stRadioLabel] { /* Radio button text */
+         color: #1e3a2d; /* Dark green */
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
+# --- Load Spotify Logo ---
+try:
+    # Assuming the logo is in the same directory as the script.
+    # You might need to adjust the path if it's located elsewhere.
+    spotify_logo = Image.open('spotify_logo.png') # Replace with the actual path to your logo file
+except FileNotFoundError:
+    st.warning("Spotify logo file not found. Please ensure 'spotify_logo.png' is in the correct directory.")
+    spotify_logo = None # Set to None if not found
+
 
 # --- App Title ---
-st.title('Spotify Listening History Analysis and Model Dashboard')
+col1, col2 = st.columns([1, 6]) # Create columns for logo and title
+with col1:
+    if spotify_logo:
+        st.image(spotify_logo, width=50) # Display logo
+with col2:
+    st.title('Spotify Track Skips Analysis Dashboard') # Updated title
 st.markdown("Exploring key factors influencing track skips and evaluating a predictive model.")
 
 # --- Load Data ---
@@ -78,12 +121,12 @@ def load_data():
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
 
-    return X_train, X_test, y_train, y_test, X.columns.tolist() # Also return feature names
+    return X_train, X_test, y_train, y_test, X.columns.tolist(), df # Also return feature names and the original (cleaned) df for metrics
 
-X_train, X_test, y_train, y_test, feature_names = load_data()
+X_train, X_test, y_train, y_test, feature_names, df_cleaned = load_data()
 
 st.sidebar.header("Navigate Dashboard")
-section = st.sidebar.radio("Go to", ['EDA Insights', 'Summary of Key Insights', 'Business Recommendations', 'Predictive Model Evaluation'])
+section = st.sidebar.radio("Go to", ['Key Performance Metrics', 'EDA Insights', 'Summary of Key Insights', 'Business Recommendations', 'Predictive Model Evaluation'])
 
 
 # --- Calculate Variables for EDA Visualizations ---
@@ -151,10 +194,60 @@ if section in ['EDA Insights', 'Summary of Key Insights', 'Business Recommendati
             'Skip Rate (%)': skip_rate_by_artist_frequency[True]
         })
 
-
 # --- Display Sections Based on Navigation ---
 
-if section == 'EDA Insights':
+if section == 'Key Performance Metrics':
+    st.header('Key Performance Metrics')
+    st.write("Overview of key statistics and model performance.")
+
+    # Calculate additional metrics
+    total_streams = len(df_cleaned)
+    total_skipped = df_cleaned['skipped'].sum()
+    overall_skip_rate = (total_skipped / total_streams) * 100 if total_streams > 0 else 0
+    streaming_period_start = df_cleaned['ts'].min().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
+    streaming_period_end = df_cleaned['ts'].max().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
+
+
+    st.subheader('Overall Data Metrics')
+    st.metric("Total Streams Analyzed", f"{total_streams:,}")
+    st.metric("Overall Skip Rate", f"{overall_skip_rate:.2f}%")
+    st.metric("Streaming Period", f"{streaming_period_start} to {streaming_period_end}")
+
+    st.subheader('Model Prediction Metrics (Tuned Random Forest)')
+    # Assume model evaluation metrics are available from the 'Predictive Model Evaluation' section
+    # You might need to train the model here or ensure these variables are passed/cached
+    # For simplicity, let's assume the tuned model metrics are calculated when 'Predictive Model Evaluation' is accessed
+    # Or train a simple model here just for these metrics display if needed
+    # Let's train a simple model for this section's metrics display
+    @st.cache_resource # Cache the model training
+    def train_simple_rf_model_for_metrics(X_train, y_train):
+        # Use default params or a simple set for quick calculation
+        simple_rf_model = RandomForestClassifier(random_state=42, class_weight='balanced')
+        simple_rf_model.fit(X_train, y_train)
+        return simple_rf_model
+
+    simple_model = train_simple_rf_model_for_metrics(X_train, y_train)
+    y_pred_simple = simple_model.predict(X_test)
+    accuracy_simple = accuracy_score(y_test, y_pred_simple)
+    # Precision for the positive class (True)
+    precision_simple = precision_score(y_test, y_pred_simple, pos_label=True)
+    # Recall for the positive class (True)
+    recall_simple = recall_score(y_test, y_pred_simple, pos_label=True)
+    # F1-score for the positive class (True)
+    f1_simple = f1_score(y_test, y_pred_simple, pos_label=True)
+
+
+    st.metric("Model Accuracy", f"{accuracy_simple:.4f}")
+    st.metric("Model Precision (Skipped=True)", f"{precision_simple:.4f}")
+    st.metric("Model Recall (Skipped=True)", f"{recall_simple:.4f}")
+    st.metric("Model F1-score (Skipped=True)", f"{f1_simple:.4f}")
+    # Note: "Prediction Reliability Score" isn't a standard single metric.
+    # Precision, Recall, F1-score, and AUC collectively indicate reliability.
+    # We'll highlight Recall for the minority class as it's often crucial for imbalance.
+    st.info("Recall (Skipped=True) is a key indicator of the model's ability to identify actual skips.")
+
+
+elif section == 'EDA Insights':
     st.header('Exploratory Data Analysis (EDA) Insights')
     st.write("Exploring patterns and factors related to track skips.")
 
@@ -164,7 +257,7 @@ if section == 'EDA Insights':
     if 'skipped_bin_proportions' in locals() and not skipped_bin_proportions.empty:
         st.write("Proportion of Skipped Streams among Skipped Streams by ms_played Bin:")
         fig, ax = plt.subplots(figsize=(10, 6))
-        sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='viridis', ax=ax)
+        sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Proportion of Skipped Streams by ms_played Bin')
         ax.set_xlabel('Milliseconds Played Bin')
         ax.set_ylabel('Proportion of Skipped Streams (%)')
@@ -173,7 +266,7 @@ if section == 'EDA Insights':
             ax.annotate(f"{skipped_bin_proportions['<30s']:.1f}%",
                         xy=('<30s', skipped_bin_proportions['<30s']),
                         xytext=(10, 5), textcoords='offset points',
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'))
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -191,7 +284,7 @@ if section == 'EDA Insights':
         })
         st.write("Skip Rate by Time of Day:")
         fig, ax = plt.subplots(figsize=(8, 5))
-        sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='viridis', ax=ax)
+        sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skip Rate by Time of Day')
         ax.set_xlabel('Time Period')
         ax.set_ylabel('Skip Rate (%)')
@@ -202,7 +295,7 @@ if section == 'EDA Insights':
             ax.annotate(f"{late_night_val:.1f}%",
                         xy=('Late Night (22:00-02:00)', late_night_val),
                         xytext=(10, 5), textcoords='offset points',
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'))
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -214,7 +307,7 @@ if section == 'EDA Insights':
     if 'platform_skipped_proportions' in locals() and not platform_skipped_proportions.empty:
         st.write("Proportion of Skipped Streams by Platform:")
         fig, ax = plt.subplots(figsize=(12, 6))
-        sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='viridis', ax=ax)
+        sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Proportion of Skipped Streams by Platform')
         ax.set_xlabel('Platform')
         ax.set_ylabel('Proportion of Skipped Streams (%)')
@@ -226,7 +319,7 @@ if section == 'EDA Insights':
              ax.annotate(f"{android_val:.1f}%",
                         xy=('android', android_val),
                         xytext=(10, 5), textcoords='offset points',
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'))
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -238,7 +331,7 @@ if section == 'EDA Insights':
     if 'skip_rate_by_artist_frequency_plot_data' in locals() and not skip_rate_by_artist_frequency_plot_data.empty:
         st.write("Skip Rate by Artist Frequency:")
         fig, ax = plt.subplots(figsize=(8, 5))
-        sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='viridis', ax=ax)
+        sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skip Rate by Artist Frequency')
         ax.set_xlabel('Artist Frequency')
         ax.set_ylabel('Skip Rate (%)')
@@ -249,7 +342,7 @@ if section == 'EDA Insights':
              ax.annotate(f"{infrequent_val:.1f}%",
                         xy=('Infrequent', infrequent_val),
                         xytext=(10, 5), textcoords='offset points',
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'))
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
 
         st.pyplot(fig)
         plt.close(fig)
@@ -322,7 +415,7 @@ elif section == 'Predictive Model Evaluation':
     st.write("Visual representation of the model's predictions vs actual values.")
 
     fig_cm, ax_cm = plt.subplots(figsize=(8, 6))
-    sns.heatmap(conf_matrix_tuned_rf, annot=True, fmt='d', cmap='Blues', ax=ax_cm,
+    sns.heatmap(conf_matrix_tuned_rf, annot=True, fmt='d', cmap='Greens', ax=ax_cm, # Use Green cmap
                 xticklabels=['Not Skipped', 'Skipped'], yticklabels=['Not Skipped', 'Skipped'])
     ax_cm.set_xlabel('Predicted Label')
     ax_cm.set_ylabel('True Label')
@@ -341,7 +434,7 @@ elif section == 'Predictive Model Evaluation':
     feature_importances_df = feature_importances_df.sort_values('Importance', ascending=False).head(20) # Display top 20
 
     fig_fi, ax_fi = plt.subplots(figsize=(10, 8))
-    sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='viridis')
+    sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='Greens_r') # Use Green palette
     ax_fi.set_title('Top 20 Feature Importances')
     ax_fi.set_xlabel('Importance')
     ax_fi.set_ylabel('Feature')
@@ -357,7 +450,7 @@ elif section == 'Predictive Model Evaluation':
     auc_score = roc_auc_score(y_test, y_proba_tuned_rf)
 
     fig_roc, ax_roc = plt.subplots(figsize=(8, 6))
-    ax_roc.plot(fpr, tpr, label=f'ROC curve (AUC = {auc_score:.2f})')
+    ax_roc.plot(fpr, tpr, label=f'ROC curve (AUC = {auc_score:.2f})', color='green') # Use green color
     ax_roc.plot([0, 1], [0, 1], 'k--', label='Random guess')
     ax_roc.set_xlabel('False Positive Rate')
     ax_roc.set_ylabel('True Positive Rate')
