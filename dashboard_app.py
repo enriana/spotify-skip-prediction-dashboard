@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image # Import Pillow for image handling
 
 # Set Streamlit page configuration to wide mode and light theme
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed", theme="light")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed") # Removed theme argument
 
 # Set a visually appealing style for matplotlib plots, using green shades
 plt.style.use('seaborn-v0_8-whitegrid') # Start with a clean style
