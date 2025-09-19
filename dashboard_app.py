@@ -8,17 +8,21 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import numpy as np
 from PIL import Image # Import Pillow for image handling
 
+# Set Streamlit page configuration to wide mode
+st.set_page_config(layout="wide")
+
 # Set a visually appealing style for matplotlib plots, using green shades
 plt.style.use('seaborn-v0_8-whitegrid') # Start with a clean style
 plt.rcParams['axes.prop_cycle'] = plt.cycler('color', sns.color_palette("Greens_r", n_colors=6)) # Apply green color cycle
 
-# --- Inject custom CSS for sticky title and green theme ---
+# --- Inject custom CSS for sticky title, green theme, and font/size adjustments ---
 st.markdown("""
     <style>
     /* Green theme */
     .stApp {
         background-color: #f0f4f0; /* Light green background */
         color: #1e3a2d; /* Dark green text */
+        font-size: 14px; /* Adjust base font size */
     }
     .css-1d3z3hw { /* Sidebar background */
         background-color: #c8e6c9; /* Medium light green */
@@ -28,22 +32,35 @@ st.markdown("""
         top: 0;
         background-color: #f0f4f0; /* Match app background */
         z-index: 999; /* Ensure it stays on top of other content */
-        padding-top: 1rem; /* Add some padding above the title */
-        padding-bottom: 1rem; /* Add some padding below the title */
+        padding-top: 0.5rem; /* Adjusted padding above the title */
+        padding-bottom: 0.5rem; /* Adjusted padding below the title */
     }
     h1 {
         color: #004d40; /* Darker green for main headers */
+        font-size: 28px; /* Adjusted H1 font size */
     }
-    h2, h3 {
+    h2 {
         color: #2e7d32; /* Medium green for subheaders */
+        font-size: 22px; /* Adjusted H2 font size */
+        margin-top: 1.5rem; /* Add space above H2 */
+        margin-bottom: 0.8rem; /* Add space below H2 */
+    }
+    h3 {
+        color: #2e7d32; /* Medium green for subheaders */
+        font-size: 18px; /* Adjusted H3 font size */
+        margin-top: 1rem; /* Add space above H3 */
+        margin-bottom: 0.5rem; /* Add space below H3 */
     }
     .st-emotion-cache-gh2jqd { /* Markdown text */
         color: #1e3a2d; /* Dark green */
+        font-size: 14px; /* Ensure markdown text uses base font size */
     }
     .stButton>button {
         background-color: #4caf50; /* Green button background */
         color: white; /* White button text */
         border-radius: 5px;
+        font-size: 14px; /* Adjusted button font size */
+        padding: 0.5rem 1rem; /* Adjusted button padding */
     }
     .stButton>button:hover {
         background-color: #388e3c; /* Darker green on hover */
@@ -51,16 +68,31 @@ st.markdown("""
     }
     .stRadio > label > div { /* Radio button label color */
          color: #1e3a2d; /* Dark green */
+         font-size: 14px; /* Adjusted radio button font size */
     }
      .stRadio [data-baseweb=radio] [data-testid=stRadioLabel] { /* Radio button text */
          color: #1e3a2d; /* Dark green */
+         font-size: 14px; /* Adjusted radio button text font size */
     }
-    /* Adjust main content area for wider layout */
-    .css-ysnqb2 { /* Common class for the main block container */
-        max-width: 1400px; /* Further increase max width for landscape */
+
+    /* Adjust metric font sizes */
+    [data-testid="stMetricValue"] {
+        font-size: 1.5rem; /* Adjust value font size */
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.9rem; /* Adjust label font size */
+        color: #1e3a2d; /* Ensure metric label color is dark green */
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 0.9rem; /* Adjust delta font size */
+    }
+
+    /* Adjust main content area for wider layout (overridden by set_page_config) */
+    /* .css-ysnqb2 {
+        max-width: 1400px;
         padding-left: 2rem;
         padding-right: 2rem;
-    }
+    } */
 
     </style>
     """, unsafe_allow_html=True)
@@ -79,7 +111,7 @@ except FileNotFoundError:
 col1, col2 = st.columns([1, 6]) # Create columns for logo and title
 with col1:
     if spotify_logo:
-        st.image(spotify_logo, width=50) # Display logo
+        st.image(spotify_logo, width=40) # Adjusted logo size
 with col2:
     st.title('Spotify Track Skips Analysis Dashboard') # Updated title
 st.markdown("Exploring key factors influencing track skips and evaluating a predictive model.")
