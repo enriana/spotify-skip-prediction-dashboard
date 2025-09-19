@@ -55,6 +55,12 @@ st.markdown("""
      .stRadio [data-baseweb=radio] [data-testid=stRadioLabel] { /* Radio button text */
          color: #1e3a2d; /* Dark green */
     }
+    /* Adjust main content area for wider layout */
+    .css-ysnqb2 { /* Common class for the main block container */
+        max-width: 1200px; /* Increase max width */
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
 
     </style>
     """, unsafe_allow_html=True)
@@ -188,11 +194,7 @@ if not skip_rate_by_artist_frequency.empty and True in skip_rate_by_artist_frequ
         'Skip Rate (%)': skip_rate_by_artist_frequency[True]
     })
 
-# --- Display All Sections Sequentially ---
-
-# EDA Insights Section
-st.header('Exploratory Data Analysis (EDA) Insights')
-st.write("Exploring patterns and factors related to track skips.")
+# --- Display All Sections Sequentially in Columns ---
 
 # Calculate and display overall data metrics as scorecards within EDA Insights
 total_streams = len(df_cleaned)
@@ -201,7 +203,8 @@ overall_skip_rate = (total_skipped / total_streams) * 100 if total_streams > 0 e
 streaming_period_start = df_cleaned['ts'].min().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
 streaming_period_end = df_cleaned['ts'].max().strftime('%Y-%m-%d') if not df_cleaned.empty else 'N/A'
 
-st.subheader('Overall Data Metrics')
+
+st.header('Overall Data Metrics')
 col1, col2, col3, col4 = st.columns(4) # Create 4 columns for scorecards
 with col1:
     st.metric("Total Streams", f"{total_streams:,}")
@@ -213,131 +216,145 @@ with col4:
     st.metric("Streaming Period", f"{streaming_period_start} to {streaming_period_end}")
 
 
-# Section: Skip Rate by Play Duration
-st.subheader('1. Skip Rate by Play Duration')
-st.write('Analysis of how the duration a track is played relates to skipping.')
-if 'skipped_bin_proportions' in locals() and not skipped_bin_proportions.empty:
-    st.write("Proportion of Skipped Streams among Skipped Streams by ms_played Bin:")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-    ax.set_title('Proportion of Skipped Streams by ms_played Bin')
-    ax.set_xlabel('Milliseconds Played Bin')
-    ax.set_ylabel('Proportion of Skipped Streams (%)')
-    # Highlight key insight: High proportion in <30s bin
-    if '<30s' in skipped_bin_proportions.index:
-        ax.annotate(f"{skipped_bin_proportions['<30s']:.1f}%",
-                    xy=('<30s', skipped_bin_proportions['<30s']),
-                    xytext=(10, 5), textcoords='offset points',
-                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
-    st.pyplot(fig)
-    plt.close(fig)
-else:
-    st.write("Visualization for ms_played bin not available.")
+# EDA Insights Section - Grouped in columns
+st.header('Exploratory Data Analysis (EDA) Insights')
+st.write("Exploring patterns and factors related to track skips.")
+
+# Create columns for EDA plots (e.g., 2 columns)
+eda_col1, eda_col2 = st.columns(2)
+
+with eda_col1:
+    # Section: Skip Rate by Play Duration
+    st.subheader('1. Skip Rate by Play Duration')
+    st.write('Analysis of how the duration a track is played relates to skipping.')
+    if 'skipped_bin_proportions' in locals() and not skipped_bin_proportions.empty:
+        st.write("Proportion of Skipped Streams among Skipped Streams by ms_played Bin:")
+        fig, ax = plt.subplots(figsize=(8, 5)) # Adjusted figure size
+        sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
+        ax.set_title('Proportion of Skipped Streams by ms_played Bin')
+        ax.set_xlabel('Milliseconds Played Bin')
+        ax.set_ylabel('Proportion of Skipped Streams (%)')
+        # Highlight key insight: High proportion in <30s bin
+        if '<30s' in skipped_bin_proportions.index:
+            ax.annotate(f"{skipped_bin_proportions['<30s']:.1f}%",
+                        xy=('<30s', skipped_bin_proportions['<30s']),
+                        xytext=(10, 5), textcoords='offset points',
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+        st.write("Visualization for ms_played bin not available.")
+
+    # Section: Skip Rate by Platform
+    st.subheader('3. Skip Rate by Platform')
+    st.write('Analysis of how the platform used relates to skipping.')
+    if 'platform_skipped_proportions' in locals() and not platform_skipped_proportions.empty:
+        st.write("Proportion of Skipped Streams by Platform:")
+        fig, ax = plt.subplots(figsize=(8, 6)) # Adjusted figure size
+        sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
+        ax.set_title('Proportion of Skipped Streams by Platform')
+        ax.set_xlabel('Platform')
+        ax.set_ylabel('Proportion of Skipped Streams (%)')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        # Highlight key insight: Highest proportion for Android
+        if 'android' in platform_skipped_proportions.index:
+             android_val = platform_skipped_proportions['android']
+             ax.annotate(f"{android_val:.1f}%",
+                        xy=('android', android_val),
+                        xytext=(10, 5), textcoords='offset points',
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+        st.write("Visualization for platform skipped proportions not available.")
 
 
-# Section: Skip Rate by Time of Day
-st.subheader('2. Skip Rate by Time of Day')
-st.write('Analysis of how the time of day relates to skipping (Late Night vs. Daytime).')
-# Check if both rates are available and not NaN before creating DataFrame and plotting
-if 'late_night_skip_rate' in locals() and pd.notna(late_night_skip_rate) and 'daytime_skip_rate' in locals() and pd.notna(daytime_skip_rate):
-    skip_rates = pd.DataFrame({
-        'Time Period': ['Late Night (22:00-02:00)', 'Daytime'],
-        'Skip Rate (%)': [late_night_skip_rate, daytime_skip_rate]
-    })
-    st.write("Skip Rate by Time of Day:")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
-    ax.set_title('Skip Rate by Time of Day')
-    ax.set_xlabel('Time Period')
-    ax.set_ylabel('Skip Rate (%)')
-    ax.set_ylim(0, 100) # Ensure y-axis is from 0 to 100 for rates
-    # Highlight key insight: Higher rate for Late Night
-    if 'Late Night (22:00-02:00)' in skip_rates['Time Period'].values:
-        late_night_val = skip_rates[skip_rates['Time Period'] == 'Late Night (22:00-02:00)']['Skip Rate (%)'].iloc[0]
-        ax.annotate(f"{late_night_val:.1f}%",
-                    xy=('Late Night (22:00-02:00)', late_night_val),
-                    xytext=(10, 5), textcoords='offset points',
-                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
-    st.pyplot(fig)
-    plt.close(fig)
-else:
-     st.write("Skip rate data for time of day not available.")
+with eda_col2:
+    # Section: Skip Rate by Time of Day
+    st.subheader('2. Skip Rate by Time of Day')
+    st.write('Analysis of how the time of day relates to skipping (Late Night vs. Daytime).')
+    # Check if both rates are available and not NaN before creating DataFrame and plotting
+    if 'late_night_skip_rate' in locals() and pd.notna(late_night_skip_rate) and 'daytime_skip_rate' in locals() and pd.notna(daytime_skip_rate):
+        skip_rates = pd.DataFrame({
+            'Time Period': ['Late Night (22:00-02:00)', 'Daytime'],
+            'Skip Rate (%)': [late_night_skip_rate, daytime_skip_rate]
+        })
+        st.write("Skip Rate by Time of Day:")
+        fig, ax = plt.subplots(figsize=(8, 5)) # Adjusted figure size
+        sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
+        ax.set_title('Skip Rate by Time of Day')
+        ax.set_xlabel('Time Period')
+        ax.set_ylabel('Skip Rate (%)')
+        ax.set_ylim(0, 100) # Ensure y-axis is from 0 to 100 for rates
+        # Highlight key insight: Higher rate for Late Night
+        if 'Late Night (22:00-02:00)' in skip_rates['Time Period'].values:
+            late_night_val = skip_rates[skip_rates['Time Period'] == 'Late Night (22:00-02:00)']['Skip Rate (%)'].iloc[0]
+            ax.annotate(f"{late_night_val:.1f}%",
+                        xy=('Late Night (22:00-02:00)', late_night_val),
+                        xytext=(10, 5), textcoords='offset points',
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+         st.write("Skip rate data for time of day not available.")
 
-# Section: Skip Rate by Platform
-st.subheader('3. Skip Rate by Platform')
-st.write('Analysis of how the platform used relates to skipping.')
-if 'platform_skipped_proportions' in locals() and not platform_skipped_proportions.empty:
-    st.write("Proportion of Skipped Streams by Platform:")
-    fig, ax = plt.subplots(figsize=(12, 6))
-    sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-    ax.set_title('Proportion of Skipped Streams by Platform')
-    ax.set_xlabel('Platform')
-    ax.set_ylabel('Proportion of Skipped Streams (%)')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    # Highlight key insight: Highest proportion for Android
-    if 'android' in platform_skipped_proportions.index:
-         android_val = platform_skipped_proportions['android']
-         ax.annotate(f"{android_val:.1f}%",
-                    xy=('android', android_val),
-                    xytext=(10, 5), textcoords='offset points',
-                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
-    st.pyplot(fig)
-    plt.close(fig)
-else:
-    st.write("Visualization for platform skipped proportions not available.")
+    # Section: Skip Rate by Artist Frequency
+    st.subheader('4. Skip Rate by Artist Frequency')
+    st.write('Analysis of how artist frequency relates to skipping.')
+    if 'skip_rate_by_artist_frequency_plot_data' in locals() and not skip_rate_by_artist_frequency_plot_data.empty:
+        st.write("Skip Rate by Artist Frequency:")
+        fig, ax = plt.subplots(figsize=(8, 5)) # Adjusted figure size
+        sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
+        ax.set_title('Skip Rate by Artist Frequency')
+        ax.set_xlabel('Artist Frequency')
+        ax.set_ylabel('Skip Rate (%)')
+        ax.set_ylim(0, 100)
+        # Highlight key insight: Higher rate for Infrequent artists
+        if 'Infrequent' in skip_rate_by_artist_frequency_plot_data['Artist Frequency'].values:
+             infrequent_val = skip_rate_by_artist_frequency_plot_data[skip_rate_by_artist_frequency_plot_data['Artist Frequency'] == 'Infrequent']['Skip Rate (%)'].iloc[0]
+             ax.annotate(f"{infrequent_val:.1f}%",
+                        xy=('Infrequent', infrequent_val),
+                        xytext=(10, 5), textcoords='offset points',
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
 
-# Section: Skip Rate by Artist Frequency
-st.subheader('4. Skip Rate by Artist Frequency')
-st.write('Analysis of how artist frequency relates to skipping.')
-if 'skip_rate_by_artist_frequency_plot_data' in locals() and not skip_rate_by_artist_frequency_plot_data.empty:
-    st.write("Skip Rate by Artist Frequency:")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
-    ax.set_title('Skip Rate by Artist Frequency')
-    ax.set_xlabel('Artist Frequency')
-    ax.set_ylabel('Skip Rate (%)')
-    ax.set_ylim(0, 100)
-    # Highlight key insight: Higher rate for Infrequent artists
-    if 'Infrequent' in skip_rate_by_artist_frequency_plot_data['Artist Frequency'].values:
-         infrequent_val = skip_rate_by_artist_frequency_plot_data[skip_rate_by_artist_frequency_plot_data['Artist Frequency'] == 'Infrequent']['Skip Rate (%)'].iloc[0]
-         ax.annotate(f"{infrequent_val:.1f}%",
-                    xy=('Infrequent', infrequent_val),
-                    xytext=(10, 5), textcoords='offset points',
-                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
-
-    st.pyplot(fig)
-    plt.close(fig)
-else:
-     st.write("Skip rate data for artist frequency not available.")
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+         st.write("Skip rate data for artist frequency not available.")
 
 
-# Summary of Key Insights Section
-st.header('Summary of Key Insights')
-st.write("""
-Based on the analysis:
-- Tracks played for less than 30 seconds are highly likely to be skipped, indicating low initial engagement.
-- Skip rates are significantly higher during late-night hours compared to daytime, suggesting contextual factors influence skipping.
-- Streams by artists the user listens to less frequently have a substantially higher skip rate, pointing to potential issues with artist recommendation diversity.
-- The Android platform accounts for a very high proportion of all skipped streams, suggesting platform-specific factors might be contributing to skips for this user.
-- The reasons streams start and end also play a role, with user-initiated skips (fwdbtn, backbtn) and interruptions (appload) being notable factors.
-""")
+# Create columns for Insights and Recommendations
+insights_col, recommendations_col = st.columns(2)
 
-# Business Recommendations Section
-st.header('Business Recommendations')
-st.write("""
-Based on these data-driven insights and the predictive model's findings, here are actionable strategies for improving recommendations and reducing disengagement:
+with insights_col:
+    # Summary of Key Insights Section
+    st.header('Summary of Key Insights')
+    st.write("""
+    Based on the analysis:
+    - Tracks played for less than 30 seconds are highly likely to be skipped, indicating low initial engagement.
+    - Skip rates are significantly higher during late-night hours compared to daytime, suggesting contextual factors influence skipping.
+    - Streams by artists the user listens to less frequently have a substantially higher skip rate, pointing to potential issues with artist recommendation diversity.
+    - The Android platform accounts for a very high proportion of all skipped streams, suggesting platform-specific factors might be contributing to skips for this user.
+    - The reasons streams start and end also play a role, with user-initiated skips (fwdbtn, backbtn) and interruptions (appload) being notable factors.
+    """)
 
-1.  **Improve Initial Track Engagement:** Focus on the first 30 seconds of recommended tracks. Experiment with different track introductions or ensure recommendations are highly relevant from the start, as skips predominantly happen very early and `ms_played` is a very important feature.
-2.  **Contextual Recommendations:** Implement time-aware recommendation strategies. Consider adjusting recommendations or playback experiences during late-night hours where skip rates are higher, reflecting its importance in the model.
-3.  **Enhance Artist Discovery:** Refine artist recommendation algorithms to better introduce new or less-frequent artists that align with the user's taste, addressing the higher skip rate for infrequent artists and their potential importance in the model. Ensure a balance between familiar and new content.
-4.  **Investigate Android Platform Experience:** Conduct a deeper analysis of the Android app's performance, UI/UX, and potential technical glitches that might be contributing to the high proportion of skipped streams originating from this platform. Address any identified frictions, as platform features are often important predictors.
-5.  **Analyze Skip Triggers:** Further investigate streams initiated by autoplay or ending with fwdbtn/backbtn to understand the specific contexts or track characteristics that trigger these user actions, as reason start/end features are also important.
+with recommendations_col:
+    # Business Recommendations Section
+    st.header('Business Recommendations')
+    st.write("""
+    Based on these data-driven insights and the predictive model's findings, here are actionable strategies for improving recommendations and reducing disengagement:
 
-These recommendations aim to directly address the identified patterns of disengagement and leverage the insights from the data and model to potentially improve the user experience and reduce churn.
-""")
+    1.  **Improve Initial Track Engagement:** Focus on the first 30 seconds of recommended tracks. Experiment with different track introductions or ensure recommendations are highly relevant from the start, as skips predominantly happen very early and `ms_played` is a very important feature.
+    2.  **Contextual Recommendations:** Implement time-aware recommendation strategies. Consider adjusting recommendations or playback experiences during late-night hours where skip rates are higher, reflecting its importance in the model.
+    3.  **Enhance Artist Discovery:** Refine artist recommendation algorithms to better introduce new or less-frequent artists that align with the user's taste, addressing the higher skip rate for infrequent artists and their potential importance in the model. Ensure a balance between familiar and new content.
+    4.  **Investigate Android Platform Experience:** Conduct a deeper analysis of the Android app's performance, UI/UX, and potential technical glitches that might be contributing to the high proportion of skipped streams originating from this platform. Address any identified frictions, as platform features are often important predictors.
+    5.  **Analyze Skip Triggers:** Further investigate streams initiated by autoplay or ending with fwdbtn/backbtn to understand the specific contexts or track characteristics that trigger these user actions, as reason start/end features are also important.
 
-# Predictive Model Evaluation Section
+    These recommendations aim to directly address the identified patterns of disengagement and leverage the insights from the data and model to potentially improve the user experience and reduce churn.
+    """)
+
+# Predictive Model Evaluation Section - Grouped in columns
 st.header('Predictive Model Evaluation')
 st.write("Evaluating the performance of the Tuned Weighted Random Forest model for predicting track skips.")
 
@@ -366,59 +383,65 @@ recall_tuned_rf = recall_score(y_test, y_pred_tuned_rf)
 f1_tuned_rf = f1_score(y_test, y_pred_tuned_rf)
 conf_matrix_tuned_rf = confusion_matrix(y_test, y_pred_tuned_rf)
 
-st.subheader('Model Performance Metrics (on Test Set)')
-st.write(f"**Accuracy:** {accuracy_tuned_rf:.4f}")
-st.write(f"**Precision (Skipped=True):** {precision_tuned_rf:.4f}")
-st.write(f"**Recall (Skipped=True):** {recall_tuned_rf:.4f}")
-st.write(f"**F1-score (Skipped=True):** {f1_tuned_rf:.4f}")
+# Create columns for Model Metrics and Confusion Matrix/ROC
+model_col1, model_col2 = st.columns(2)
 
-st.subheader('Confusion Matrix')
-st.write("Visual representation of the model's predictions vs actual values.")
+with model_col1:
+    st.subheader('Model Performance Metrics (on Test Set)')
+    st.write(f"**Accuracy:** {accuracy_tuned_rf:.4f}")
+    st.write(f"**Precision (Skipped=True):** {precision_tuned_rf:.4f}")
+    st.write(f"**Recall (Skipped=True):** {recall_tuned_rf:.4f}")
+    st.write(f"**F1-score (Skipped=True):** {f1_tuned_rf:.4f}")
 
-fig_cm, ax_cm = plt.subplots(figsize=(8, 6))
-sns.heatmap(conf_matrix_tuned_rf, annot=True, fmt='d', cmap='Greens', ax=ax_cm, # Use Green cmap
-            xticklabels=['Not Skipped', 'Skipped'], yticklabels=['Not Skipped', 'Skipped'])
-ax_cm.set_xlabel('Predicted Label')
-ax_cm.set_ylabel('True Label')
-ax_cm.set_title('Confusion Matrix')
-st.pyplot(fig_cm)
-plt.close(fig_cm)
+    st.subheader('Feature Importances')
+    st.write("Identifying which features were most influential in the model's predictions.")
 
-st.subheader('Feature Importances')
-st.write("Identifying which features were most influential in the model's predictions.")
+    # Get feature importances from the tuned model
+    importances = tuned_rf_model.feature_importances_
+    # Create a DataFrame for better visualization
+    feature_importances_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+    # Sort by importance
+    feature_importances_df = feature_importances_df.sort_values('Importance', ascending=False).head(10) # Display top 10 for brevity in column
 
-# Get feature importances from the tuned model
-importances = tuned_rf_model.feature_importances_
-# Create a DataFrame for better visualization
-feature_importances_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
-# Sort by importance
-feature_importances_df = feature_importances_df.sort_values('Importance', ascending=False).head(20) # Display top 20
+    fig_fi, ax_fi = plt.subplots(figsize=(8, 6)) # Adjusted figure size
+    sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='Greens_r') # Use Green palette
+    ax_fi.set_title('Top 10 Feature Importances')
+    ax_fi.set_xlabel('Importance')
+    ax_fi.set_ylabel('Feature')
+    plt.tight_layout()
+    st.pyplot(fig_fi)
+    plt.close(fig_fi)
 
-fig_fi, ax_fi = plt.subplots(figsize=(10, 8))
-sns.barplot(x='Importance', y='Feature', data=feature_importances_df, ax=ax_fi, palette='Greens_r') # Use Green palette
-ax_fi.set_title('Top 20 Feature Importances')
-ax_fi.set_xlabel('Importance')
-ax_fi.set_ylabel('Feature')
-plt.tight_layout()
-st.pyplot(fig_fi)
-plt.close(fig_fi)
 
-st.subheader('ROC Curve and AUC')
-st.write("Assessing the model's ability to distinguish between skipped and not-skipped tracks.")
+with model_col2:
+    st.subheader('Confusion Matrix')
+    st.write("Visual representation of the model's predictions vs actual values.")
 
-y_proba_tuned_rf = tuned_rf_model.predict_proba(X_test)[:, 1] # Probability of the positive class (skipped=True)
-fpr, tpr, thresholds = roc_curve(y_test, y_proba_tuned_rf)
-auc_score = roc_auc_score(y_test, y_proba_tuned_rf)
+    fig_cm, ax_cm = plt.subplots(figsize=(6, 5)) # Adjusted figure size
+    sns.heatmap(conf_matrix_tuned_rf, annot=True, fmt='d', cmap='Greens', ax=ax_cm, # Use Green cmap
+                xticklabels=['Not Skipped', 'Skipped'], yticklabels=['Not Skipped', 'Skipped'])
+    ax_cm.set_xlabel('Predicted Label')
+    ax_cm.set_ylabel('True Label')
+    ax_cm.set_title('Confusion Matrix')
+    st.pyplot(fig_cm)
+    plt.close(fig_cm)
 
-fig_roc, ax_roc = plt.subplots(figsize=(8, 6))
-ax_roc.plot(fpr, tpr, label=f'ROC curve (AUC = {auc_score:.2f})', color='green') # Use green color
-ax_roc.plot([0, 1], [0, 1], 'k--', label='Random guess')
-ax_roc.set_xlabel('False Positive Rate')
-ax_roc.set_ylabel('True Positive Rate')
-ax_roc.set_title('ROC Curve')
-ax_roc.legend(loc='lower right')
-st.pyplot(fig_roc)
-plt.close(fig_roc)
+    st.subheader('ROC Curve and AUC')
+    st.write("Assessing the model's ability to distinguish between skipped and not-skipped tracks.")
+
+    y_proba_tuned_rf = tuned_rf_model.predict_proba(X_test)[:, 1] # Probability of the positive class (skipped=True)
+    fpr, tpr, thresholds = roc_curve(y_test, y_proba_tuned_rf)
+    auc_score = roc_auc_score(y_test, y_proba_tuned_rf)
+
+    fig_roc, ax_roc = plt.subplots(figsize=(6, 5)) # Adjusted figure size
+    ax_roc.plot(fpr, tpr, label=f'ROC curve (AUC = {auc_score:.2f})', color='green') # Use green color
+    ax_roc.plot([0, 1], [0, 1], 'k--', label='Random guess')
+    ax_roc.set_xlabel('False Positive Rate')
+    ax_roc.set_ylabel('True Positive Rate')
+    ax_roc.set_title('ROC Curve')
+    ax_roc.legend(loc='lower right')
+    st.pyplot(fig_roc)
+    plt.close(fig_roc)
 
 
 # --- End of App ---
