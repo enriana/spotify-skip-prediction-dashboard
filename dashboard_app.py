@@ -291,8 +291,8 @@ with col_time_chart:
         # Calculate total streams per time of day category for the filtered data
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
-        # Create the bar chart
-        fig_time, ax_time = plt.subplots(figsize=(5, 3)) # Further adjusted figure size
+        # Create the bar chart - Adjusted figure size
+        fig_time, ax_time = plt.subplots(figsize=(4.5, 3.5)) # Match model evaluation chart size
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
         ax_time.set_title('Total Streams by Time of Day')
         ax_time.set_xlabel('Time of Day')
@@ -362,7 +362,7 @@ with eda_plot_col1:
     st.write('Duration analysis.')
     if not skipped_bin_proportions.empty: # Check if data is available after filtering
         st.write("Skipped streams by duration bin:")
-        fig, ax = plt.subplots(figsize=(5, 3)) # Further adjusted figure size
+        fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skipped Streams by ms_played Bin')
         ax.set_xlabel('Milliseconds Played Bin')
@@ -384,7 +384,7 @@ with eda_plot_col1:
     st.write('Platform analysis.')
     if not platform_skipped_proportions.empty: # Check if data is available after filtering
         st.write("Skipped streams by Platform:")
-        fig, ax = plt.subplots(figsize=(5, 3)) # Further adjusted figure size
+        fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skipped Streams by Platform')
         ax.set_xlabel('Platform')
@@ -415,7 +415,7 @@ with eda_plot_col2:
             'Skip Rate (%)': [late_night_skip_rate, daytime_skip_rate]
         })
         st.write("Skip Rate by Time of Day:")
-        fig, ax = plt.subplots(figsize=(5, 3)) # Further adjusted figure size
+        fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skip Rate by Time of Day')
         ax.set_xlabel('Time Period')
@@ -438,7 +438,7 @@ with eda_plot_col2:
     st.write('Artist frequency analysis.')
     if not skip_rate_by_artist_frequency_plot_data.empty: # Check if data is available after filtering
         st.write("Skip Rate by Artist Frequency:")
-        fig, ax = plt.subplots(figsize=(5, 3)) # Further adjusted figure size
+        fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
         ax.set_title('Skip Rate by Artist Frequency')
         ax.set_xlabel('Artist Frequency')
