@@ -292,7 +292,7 @@ with col_time_chart:
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
         # Create the bar chart - Adjusted figure size
-        fig_time, ax_time = plt.subplots(figsize=(4.5, 3.5)) # Match model evaluation chart size
+        fig_time, ax_time = plt.subplots(figsize=(2.25, 1.675)) # Match model evaluation chart size
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
         ax_time.set_title('Total Streams by Time of Day')
         ax_time.set_xlabel('Time of Day')
