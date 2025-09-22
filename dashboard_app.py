@@ -241,8 +241,8 @@ with col_metrics:
 
 # --- Top Lists & Streams by Time of Day ---
 st.header('Top Lists and Streams by Time of Day (within selected period)') # Combined header
-# Adjusted column ratios for top lists and time chart
-col_top_lists, col_time_chart = st.columns([5, 1]) # Adjusted to 5/6 and 1/6
+# Adjusted column ratios for top lists and time chart to 4/5 and 1/5
+col_top_lists, col_time_chart = st.columns([4, 1])
 
 with col_top_lists:
     st.subheader('Top Lists')
@@ -293,7 +293,7 @@ with col_time_chart:
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
         # Create the bar chart - Adjusted figure size and font sizes for smaller column
-        fig_time, ax_time = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/6 column
+        fig_time, ax_time = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/5 column
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
         ax_time.set_title('Total Streams by Time of Day', fontsize=10) # Adjusted font size
         ax_time.set_xlabel('Time of Day', fontsize=8) # Adjusted font size
