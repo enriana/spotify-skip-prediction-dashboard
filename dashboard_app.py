@@ -241,7 +241,8 @@ with col_metrics:
 
 # --- Top Lists & Streams by Time of Day ---
 st.header('Top Lists and Streams by Time of Day (within selected period)') # Combined header
-col_top_lists, col_time_chart = st.columns([1, 1]) # Create columns for top lists and the time chart
+# Adjusted column ratios for top lists and time chart
+col_top_lists, col_time_chart = st.columns([5, 1]) # Adjusted to 5/6 and 1/6
 
 with col_top_lists:
     st.subheader('Top Lists')
@@ -291,14 +292,14 @@ with col_time_chart:
         # Calculate total streams per time of day category for the filtered data
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
-        # Create the bar chart - Adjusted figure size and font sizes
-        fig_time, ax_time = plt.subplots(figsize=(6, 4)) # Adjusted size
+        # Create the bar chart - Adjusted figure size and font sizes for smaller column
+        fig_time, ax_time = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/6 column
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
-        ax_time.set_title('Total Streams by Time of Day', fontsize=12) # Adjusted font size
-        ax_time.set_xlabel('Time of Day', fontsize=10) # Adjusted font size
-        ax_time.set_ylabel('Total Stream Count', fontsize=10) # Adjusted font size
-        plt.xticks(fontsize=9) # Adjusted tick font size
-        plt.yticks(fontsize=9) # Adjusted tick font size
+        ax_time.set_title('Total Streams by Time of Day', fontsize=10) # Adjusted font size
+        ax_time.set_xlabel('Time of Day', fontsize=8) # Adjusted font size
+        ax_time.set_ylabel('Total Stream Count', fontsize=8) # Adjusted font size
+        plt.xticks(rotation=45, ha='right', fontsize=7) # Adjusted tick font size and rotation
+        plt.yticks(fontsize=7) # Adjusted tick font size
         plt.tight_layout() # Adjust layout to prevent labels overlapping
         st.pyplot(fig_time)
         plt.close(fig_time)
@@ -355,8 +356,8 @@ else:
     skip_rate_by_artist_frequency_plot_data = pd.DataFrame()
 
 
-# Create sub-columns for EDA plots
-eda_plot_col1, eda_plot_col2 = st.columns(2)
+# Create sub-columns for EDA plots - All four on the same line
+eda_plot_col1, eda_plot_col2, eda_plot_col3, eda_plot_col4 = st.columns(4) # Created 4 columns
 
 with eda_plot_col1:
     # Section: Skip Rate by Play Duration
@@ -364,49 +365,23 @@ with eda_plot_col1:
     st.write('Duration analysis.')
     if not skipped_bin_proportions.empty: # Check if data is available after filtering
         st.write("Skipped streams by duration bin:")
-        fig, ax = plt.subplots(figsize=(6, 4)) # Adjusted size
+        fig, ax = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/4 column
         sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skipped Streams by ms_played Bin', fontsize=12) # Adjusted font size
-        ax.set_xlabel('Milliseconds Played Bin', fontsize=10) # Adjusted font size
-        ax.set_ylabel('Proportion (%)', fontsize=10) # Adjusted font size
-        plt.xticks(fontsize=9) # Adjusted tick font size
-        plt.yticks(fontsize=9) # Adjusted tick font size
+        ax.set_title('Skipped Streams by ms_played Bin', fontsize=10) # Adjusted font size
+        ax.set_xlabel('Milliseconds Played Bin', fontsize=8) # Adjusted font size
+        ax.set_ylabel('Proportion (%)', fontsize=8) # Adjusted font size
+        plt.xticks(fontsize=7) # Adjusted tick font size
+        plt.yticks(fontsize=7) # Adjusted tick font size
         # Highlight key insight: High proportion in <30s bin
         if '<30s' in skipped_bin_proportions.index:
             ax.annotate(f"{skipped_bin_proportions['<30s']:.1f}%",
                         xy=('<30s', skipped_bin_proportions['<30s']),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=9) # Black arrow for contrast, adjusted font size
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=7) # Black arrow for contrast, adjusted font size
         st.pyplot(fig)
         plt.close(fig)
     else:
         st.write("Visualization for ms_played bin not available for the selected period.")
-
-
-    # Section: Skip Rate by Platform
-    st.subheader('3. Platform Skips')
-    st.write('Platform analysis.')
-    if not platform_skipped_proportions.empty: # Check if data is available after filtering
-        st.write("Skipped streams by Platform:")
-        fig, ax = plt.subplots(figsize=(6, 4)) # Adjusted size
-        sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skipped Streams by Platform', fontsize=12) # Adjusted font size
-        ax.set_xlabel('Platform', fontsize=10) # Adjusted font size
-        ax.set_ylabel('Proportion (%)', fontsize=10) # Adjusted font size
-        plt.xticks(rotation=45, ha='right', fontsize=9) # Adjusted tick font size
-        plt.yticks(fontsize=9) # Adjusted tick font size
-        plt.tight_layout()
-        # Highlight key insight: Highest proportion for Android
-        if 'android' in platform_skipped_proportions.index:
-             android_val = platform_skipped_proportions['android']
-             ax.annotate(f"{android_val:.1f}%",
-                        xy=('android', android_val),
-                        xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=9) # Black arrow for contrast, adjusted font size
-        st.pyplot(fig)
-        plt.close(fig)
-    else:
-        st.write("Visualization for platform skipped proportions not available for the selected period.")
 
 
 with eda_plot_col2:
@@ -420,51 +395,80 @@ with eda_plot_col2:
             'Skip Rate (%)': [late_night_skip_rate, daytime_skip_rate]
         })
         st.write("Skip Rate by Time of Day:")
-        fig, ax = plt.subplots(figsize=(6, 4)) # Adjusted size
+        fig, ax = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/4 column
         sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skip Rate by Time of Day', fontsize=12) # Adjusted font size
-        ax.set_xlabel('Time Period', fontsize=10) # Adjusted font size
-        ax.set_ylabel('Skip Rate (%)', fontsize=10) # Adjusted font size
+        ax.set_title('Skip Rate by Time of Day', fontsize=10) # Adjusted font size
+        ax.set_xlabel('Time Period', fontsize=8) # Adjusted font size
+        ax.set_ylabel('Skip Rate (%)', fontsize=8) # Adjusted font size
         ax.set_ylim(0, 100) # Ensure y-axis is from 0 to 100 for rates
-        plt.xticks(fontsize=9) # Adjusted tick font size
-        plt.yticks(fontsize=9) # Adjusted tick font size
+        plt.xticks(rotation=45, ha='right', fontsize=7) # Adjusted tick font size and rotation
+        plt.yticks(fontsize=7) # Adjusted tick font size
+        plt.tight_layout() # Adjust layout to prevent labels overlapping
         # Highlight key insight: Higher rate for Late Night
         if 'Late Night (22:00-02:00)' in skip_rates['Time Period'].values:
             late_night_val = skip_rates[skip_rates['Time Period'] == 'Late Night (22:00-02:00)']['Skip Rate (%)'].iloc[0]
             ax.annotate(f"{late_night_val:.1f}%",
                         xy=('Late Night (22:00-02:00)', late_night_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=9) # Black arrow for contrast, adjusted font size
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=7) # Black arrow for contrast, adjusted font size
         st.pyplot(fig)
         plt.close(fig)
     else:
          st.write("Skip rate data for time of day not available for the selected period.")
 
+with eda_plot_col3:
+    # Section: Skip Rate by Platform
+    st.subheader('3. Platform Skips')
+    st.write('Platform analysis.')
+    if not platform_skipped_proportions.empty: # Check if data is available after filtering
+        st.write("Skipped streams by Platform:")
+        fig, ax = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/4 column
+        sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
+        ax.set_title('Skipped Streams by Platform', fontsize=10) # Adjusted font size
+        ax.set_xlabel('Platform', fontsize=8) # Adjusted font size
+        ax.set_ylabel('Proportion (%)', fontsize=8) # Adjusted font size
+        plt.xticks(rotation=45, ha='right', fontsize=7) # Adjusted tick font size
+        plt.yticks(fontsize=7) # Adjusted tick font size
+        plt.tight_layout()
+        # Highlight key insight: Highest proportion for Android
+        if 'android' in platform_skipped_proportions.index:
+             android_val = platform_skipped_proportions['android']
+             ax.annotate(f"{android_val:.1f}%",
+                        xy=('android', android_val),
+                        xytext=(5, 5), textcoords='offset points', # Adjusted text position
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=7) # Black arrow for contrast, adjusted font size
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+        st.write("Visualization for platform skipped proportions not available for the selected period.")
+
+with eda_plot_col4:
     # Section: Skip Rate by Artist Frequency
     st.subheader('4. Artist Frequency')
     st.write('Artist frequency analysis.')
     if not skip_rate_by_artist_frequency_plot_data.empty: # Check if data is available after filtering
         st.write("Skip Rate by Artist Frequency:")
-        fig, ax = plt.subplots(figsize=(6, 4)) # Adjusted size
+        fig, ax = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/4 column
         sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skip Rate by Artist Frequency', fontsize=12) # Adjusted font size
-        ax.set_xlabel('Artist Frequency', fontsize=10) # Adjusted font size
-        ax.set_ylabel('Skip Rate (%)', fontsize=10) # Adjusted font size
+        ax.set_title('Skip Rate by Artist Frequency', fontsize=10) # Adjusted font size
+        ax.set_xlabel('Artist Frequency', fontsize=8) # Adjusted font size
+        ax.set_ylabel('Skip Rate (%)', fontsize=8) # Adjusted font size
         ax.set_ylim(0, 100)
-        plt.xticks(fontsize=9) # Adjusted tick font size
-        plt.yticks(fontsize=9) # Adjusted tick font size
+        plt.xticks(fontsize=7) # Adjusted tick font size
+        plt.yticks(fontsize=7) # Adjusted tick font size
         # Highlight key insight: Higher rate for Infrequent artists
         if 'Infrequent' in skip_rate_by_artist_frequency_plot_data['Artist Frequency'].values:
              infrequent_val = skip_rate_by_artist_frequency_plot_data[skip_rate_by_artist_frequency_plot_data['Artist Frequency'] == 'Infrequent']['Skip Rate (%)'].iloc[0]
              ax.annotate(f"{infrequent_val:.1f}%",
                         xy=('Infrequent', infrequent_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=9) # Black arrow for contrast, adjusted font size
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=7) # Black arrow for contrast, adjusted font size
 
         st.pyplot(fig)
         plt.close(fig)
     else:
          st.write("Skip rate data for artist frequency not available for the selected period.")
+
 
 # Create main columns for the layout - Adjusted columns for insights and model evaluation
 col_insights_recs, col_model_eval = st.columns([1, 1]) # Adjusted ratios as needed
