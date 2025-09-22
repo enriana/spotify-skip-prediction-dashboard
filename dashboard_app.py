@@ -239,65 +239,69 @@ with col_metrics:
     with col5:
         st.metric("Total Unique Artists", f"{total_unique_artists:,}")
 
-# --- Top Lists ---
-st.header('Top Lists (within selected period)')
-col_top_songs, col_top_artists, col_top_albums = st.columns(3)
+# --- Top Lists & Streams by Time of Day ---
+st.header('Top Lists and Streams by Time of Day (within selected period)') # Combined header
+col_top_lists, col_time_chart = st.columns([1, 1]) # Create columns for top lists and the time chart
 
-with col_top_songs:
-    st.subheader('Top Songs')
+with col_top_lists:
+    st.subheader('Top Lists')
+    col_top_songs, col_top_artists, col_top_albums = st.columns(3)
+
+    with col_top_songs:
+        st.subheader('Top Songs')
+        if not df_filtered.empty:
+            # Assuming 'track_name' is the column for song titles
+            top_songs = df_filtered['track_name'].value_counts().reset_index()
+            top_songs.columns = ['Song Title', 'Stream Count']
+            st.dataframe(top_songs.head(10), hide_index=True) # Display top 10 as a dataframe
+        else:
+            st.write("No data available to show top songs.")
+
+    with col_top_artists:
+        st.subheader('Top Artists')
+        if not df_filtered.empty:
+            # Assuming 'artist_name' is the column for artist names
+            top_artists = df_filtered['artist_name'].value_counts().reset_index()
+            top_artists.columns = ['Artist Name', 'Stream Count']
+            st.dataframe(top_artists.head(10), hide_index=True) # Display top 10 as a dataframe
+        else:
+            st.write("No data available to show top artists.")
+
+    with col_top_albums:
+        st.subheader('Top Albums')
+        if not df_filtered.empty:
+            # Assuming 'album_name' is the column for album names
+            top_albums = df_filtered['album_name'].value_counts().reset_index()
+            top_albums.columns = ['Album Name', 'Stream Count']
+            st.dataframe(top_albums.head(10), hide_index=True) # Display top 10 as a dataframe
+        else:
+            st.write("No data available to show top albums.")
+
+with col_time_chart:
+    st.subheader('Streams by Time of Day')
     if not df_filtered.empty:
-        # Assuming 'track_name' is the column for song titles
-        top_songs = df_filtered['track_name'].value_counts().reset_index()
-        top_songs.columns = ['Song Title', 'Stream Count']
-        st.dataframe(top_songs.head(10), hide_index=True) # Display top 10 as a dataframe
+        # Calculate streams per hour for the filtered data
+        streams_by_hour_filtered = df_filtered['hour'].value_counts().sort_index()
+        streams_by_hour_df = streams_by_hour_filtered.reset_index()
+        streams_by_hour_df.columns = ['Hour', 'Stream Count']
+
+        # Map hours to time of day categories for the filtered data
+        streams_by_hour_df['Time of Day'] = streams_by_hour_df['Hour'].apply(get_time_of_day)
+
+        # Calculate total streams per time of day category for the filtered data
+        streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
+
+        # Create the bar chart
+        fig_time, ax_time = plt.subplots(figsize=(6, 4)) # Adjusted figure size for aligning with top lists
+        sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
+        ax_time.set_title('Total Streams by Time of Day')
+        ax_time.set_xlabel('Time of Day')
+        ax_time.set_ylabel('Total Stream Count')
+        plt.tight_layout() # Adjust layout to prevent labels overlapping
+        st.pyplot(fig_time)
+        plt.close(fig_time)
     else:
-        st.write("No data available to show top songs.")
-
-with col_top_artists:
-    st.subheader('Top Artists')
-    if not df_filtered.empty:
-        # Assuming 'artist_name' is the column for artist names
-        top_artists = df_filtered['artist_name'].value_counts().reset_index()
-        top_artists.columns = ['Artist Name', 'Stream Count']
-        st.dataframe(top_artists.head(10), hide_index=True) # Display top 10 as a dataframe
-    else:
-        st.write("No data available to show top artists.")
-
-with col_top_albums:
-    st.subheader('Top Albums')
-    if not df_filtered.empty:
-        # Assuming 'album_name' is the column for album names
-        top_albums = df_filtered['album_name'].value_counts().reset_index()
-        top_albums.columns = ['Album Name', 'Stream Count']
-        st.dataframe(top_albums.head(10), hide_index=True) # Display top 10 as a dataframe
-    else:
-        st.write("No data available to show top albums.")
-
-
-# --- Streams by Time of Day Chart ---
-st.header('Streams by Time of Day (within selected period)')
-if not df_filtered.empty:
-    # Calculate streams per hour for the filtered data
-    streams_by_hour_filtered = df_filtered['hour'].value_counts().sort_index()
-    streams_by_hour_df = streams_by_hour_filtered.reset_index()
-    streams_by_hour_df.columns = ['Hour', 'Stream Count']
-
-    # Map hours to time of day categories for the filtered data
-    streams_by_hour_df['Time of Day'] = streams_by_hour_df['Hour'].apply(get_time_of_day)
-
-    # Calculate total streams per time of day category for the filtered data
-    streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
-
-    # Create the bar chart
-    fig_time, ax_time = plt.subplots(figsize=(10, 6)) # Adjusted figure size
-    sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
-    ax_time.set_title('Total Streams by Time of Day')
-    ax_time.set_xlabel('Time of Day')
-    ax_time.set_ylabel('Total Stream Count')
-    st.pyplot(fig_time)
-    plt.close(fig_time)
-else:
-    st.write("No data available to show streams by time of day for the selected period.")
+        st.write("No data available to show streams by time of day for the selected period.")
 
 
 # --- EDA Insights Section ---
