@@ -292,11 +292,13 @@ with col_time_chart:
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
         # Create the bar chart - Adjusted figure size
-        fig_time, ax_time = plt.subplots(figsize=(4.5, 3.35)) # Match model evaluation chart size
+        fig_time, ax_time = plt.subplots(figsize=(4.5, 3.5)) # Match model evaluation chart size
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
-        ax_time.set_title('Total Streams by Time of Day')
-        ax_time.set_xlabel('Time of Day')
-        ax_time.set_ylabel('Total Stream Count')
+        ax_time.set_title('Total Streams by Time of Day', fontsize=10) # Reduced font size
+        ax_time.set_xlabel('Time of Day', fontsize=8) # Reduced font size
+        ax_time.set_ylabel('Total Stream Count', fontsize=8) # Reduced font size
+        plt.xticks(fontsize=8) # Reduced tick font size
+        plt.yticks(fontsize=8) # Reduced tick font size
         plt.tight_layout() # Adjust layout to prevent labels overlapping
         st.pyplot(fig_time)
         plt.close(fig_time)
@@ -364,15 +366,17 @@ with eda_plot_col1:
         st.write("Skipped streams by duration bin:")
         fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skipped Streams by ms_played Bin')
-        ax.set_xlabel('Milliseconds Played Bin')
-        ax.set_ylabel('Proportion (%)')
+        ax.set_title('Skipped Streams by ms_played Bin', fontsize=10) # Reduced font size
+        ax.set_xlabel('Milliseconds Played Bin', fontsize=8) # Reduced font size
+        ax.set_ylabel('Proportion (%)', fontsize=8) # Reduced font size
+        plt.xticks(fontsize=8) # Reduced tick font size
+        plt.yticks(fontsize=8) # Reduced tick font size
         # Highlight key insight: High proportion in <30s bin
         if '<30s' in skipped_bin_proportions.index:
             ax.annotate(f"{skipped_bin_proportions['<30s']:.1f}%",
                         xy=('<30s', skipped_bin_proportions['<30s']),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -386,10 +390,11 @@ with eda_plot_col1:
         st.write("Skipped streams by Platform:")
         fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x=platform_skipped_proportions.index, y=platform_skipped_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skipped Streams by Platform')
-        ax.set_xlabel('Platform')
-        ax.set_ylabel('Proportion (%)')
-        plt.xticks(rotation=45, ha='right')
+        ax.set_title('Skipped Streams by Platform', fontsize=10) # Reduced font size
+        ax.set_xlabel('Platform', fontsize=8) # Reduced font size
+        ax.set_ylabel('Proportion (%)', fontsize=8) # Reduced font size
+        plt.xticks(rotation=45, ha='right', fontsize=8) # Reduced tick font size
+        plt.yticks(fontsize=8) # Reduced tick font size
         plt.tight_layout()
         # Highlight key insight: Highest proportion for Android
         if 'android' in platform_skipped_proportions.index:
@@ -397,7 +402,7 @@ with eda_plot_col1:
              ax.annotate(f"{android_val:.1f}%",
                         xy=('android', android_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -417,17 +422,19 @@ with eda_plot_col2:
         st.write("Skip Rate by Time of Day:")
         fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x='Time Period', y='Skip Rate (%)', data=skip_rates, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skip Rate by Time of Day')
-        ax.set_xlabel('Time Period')
-        ax.set_ylabel('Skip Rate (%)')
+        ax.set_title('Skip Rate by Time of Day', fontsize=10) # Reduced font size
+        ax.set_xlabel('Time Period', fontsize=8) # Reduced font size
+        ax.set_ylabel('Skip Rate (%)', fontsize=8) # Reduced font size
         ax.set_ylim(0, 100) # Ensure y-axis is from 0 to 100 for rates
+        plt.xticks(fontsize=8) # Reduced tick font size
+        plt.yticks(fontsize=8) # Reduced tick font size
         # Highlight key insight: Higher rate for Late Night
         if 'Late Night (22:00-02:00)' in skip_rates['Time Period'].values:
             late_night_val = skip_rates[skip_rates['Time Period'] == 'Late Night (22:00-02:00)']['Skip Rate (%)'].iloc[0]
             ax.annotate(f"{late_night_val:.1f}%",
                         xy=('Late Night (22:00-02:00)', late_night_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -440,17 +447,19 @@ with eda_plot_col2:
         st.write("Skip Rate by Artist Frequency:")
         fig, ax = plt.subplots(figsize=(4.5, 3.5)) # Adjusted figure size to match model evaluation plots
         sns.barplot(x='Artist Frequency', y='Skip Rate (%)', data=skip_rate_by_artist_frequency_plot_data, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skip Rate by Artist Frequency')
-        ax.set_xlabel('Artist Frequency')
-        ax.set_ylabel('Skip Rate (%)')
+        ax.set_title('Skip Rate by Artist Frequency', fontsize=10) # Reduced font size
+        ax.set_xlabel('Artist Frequency', fontsize=8) # Reduced font size
+        ax.set_ylabel('Skip Rate (%)', fontsize=8) # Reduced font size
         ax.set_ylim(0, 100)
+        plt.xticks(fontsize=8) # Reduced tick font size
+        plt.yticks(fontsize=8) # Reduced tick font size
         # Highlight key insight: Higher rate for Infrequent artists
         if 'Infrequent' in skip_rate_by_artist_frequency_plot_data['Artist Frequency'].values:
              infrequent_val = skip_rate_by_artist_frequency_plot_data[skip_rate_by_artist_frequency_plot_data['Artist Frequency'] == 'Infrequent']['Skip Rate (%)'].iloc[0]
              ax.annotate(f"{infrequent_val:.1f}%",
                         xy=('Infrequent', infrequent_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
-                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black')) # Black arrow for contrast
+                        arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
 
         st.pyplot(fig)
         plt.close(fig)
