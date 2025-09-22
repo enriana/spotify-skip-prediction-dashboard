@@ -300,6 +300,10 @@ with col_time_chart:
         plt.xticks(fontsize=8) # Reduced tick font size
         plt.yticks(fontsize=8) # Reduced tick font size
         plt.tight_layout() # Adjust layout to prevent labels overlapping
+print(f"Figure size for Time of Day chart: {fig_time.get_size_inches()}")
+# Or for EDA charts:
+# print(f"Figure size for EDA chart: {fig.get_size_inches()}")
+
         st.pyplot(fig_time)
         plt.close(fig_time)
     else:
@@ -377,6 +381,10 @@ with eda_plot_col1:
                         xy=('<30s', skipped_bin_proportions['<30s']),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
                         arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
+print(f"Figure size for Time of Day chart: {fig_time.get_size_inches()}")
+# Or for EDA charts:
+# print(f"Figure size for EDA chart: {fig.get_size_inches()}")
+
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -403,6 +411,10 @@ with eda_plot_col1:
                         xy=('android', android_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
                         arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
+print(f"Figure size for Time of Day chart: {fig_time.get_size_inches()}")
+# Or for EDA charts:
+# print(f"Figure size for EDA chart: {fig.get_size_inches()}")
+
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -435,6 +447,10 @@ with eda_plot_col2:
                         xy=('Late Night (22:00-02:00)', late_night_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
                         arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
+print(f"Figure size for Time of Day chart: {fig_time.get_size_inches()}")
+# Or for EDA charts:
+# print(f"Figure size for EDA chart: {fig.get_size_inches()}")
+
         st.pyplot(fig)
         plt.close(fig)
     else:
@@ -460,6 +476,9 @@ with eda_plot_col2:
                         xy=('Infrequent', infrequent_val),
                         xytext=(5, 5), textcoords='offset points', # Adjusted text position
                         arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2', color='black'), fontsize=8) # Black arrow for contrast, reduced font size
+print(f"Figure size for Time of Day chart: {fig_time.get_size_inches()}")
+# Or for EDA charts:
+# print(f"Figure size for EDA chart: {fig.get_size_inches()}")
 
         st.pyplot(fig)
         plt.close(fig)
