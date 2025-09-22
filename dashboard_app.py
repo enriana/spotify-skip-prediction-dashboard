@@ -116,6 +116,14 @@ with col2:
     st.title('Spotify Track Skips Analysis Dashboard') # Updated title
 st.markdown("Exploring key factors influencing track skips and evaluating a predictive model.")
 
+# Define get_time_of_day function outside load_data for broader access
+def get_time_of_day(hour):
+    if 5 <= hour < 12: return 'Morning'
+    elif 12 <= hour < 17: return 'Afternoon'
+    elif 17 <= hour < 22: return 'Evening'
+    else: return 'Late Night'
+
+
 # --- Load Data ---
 @st.cache_data
 def load_data():
@@ -127,12 +135,8 @@ def load_data():
     df['ts'] = pd.to_datetime(df['ts'])
     df['hour'] = df['ts'].dt.hour
     df['dayofweek'] = df['ts'].dt.dayofweek
-    def get_time_of_day(hour):
-        if 5 <= hour < 12: return 'Morning'
-        elif 12 <= hour < 17: return 'Afternoon'
-        elif 17 <= hour < 22: return 'Evening'
-        else: return 'Late Night'
-    df['time_of_day'] = df['hour'].apply(get_time_of_day)
+
+    df['time_of_day'] = df['hour'].apply(get_time_of_day) # Use the globally defined function
     df['played_less_than_30s'] = df['ms_played'] < 30000
     artist_stream_counts = df['artist_name'].value_counts()
     median_stream_count = artist_stream_counts.median()
@@ -175,12 +179,7 @@ def load_original_df_for_eda():
     df['ts'] = pd.to_datetime(df['ts'])
     df['hour'] = df['ts'].dt.hour
     df['dayofweek'] = df['ts'].dt.dayofweek
-    def get_time_of_day(hour):
-        if 5 <= hour < 12: return 'Morning'
-        elif 12 <= hour < 17: return 'Afternoon'
-        elif 17 <= hour < 22: return 'Evening'
-        else: return 'Late Night'
-    df['time_of_day'] = df['hour'].apply(get_time_of_day)
+    df['time_of_day'] = df['hour'].apply(get_time_of_day) # Use the globally defined function
     df['played_less_than_30s'] = df['ms_played'] < 30000
     artist_stream_counts = df['artist_name'].value_counts()
     median_stream_count = artist_stream_counts.median()
@@ -189,6 +188,10 @@ def load_original_df_for_eda():
     return df
 
 df_eda = load_original_df_for_eda()
+
+# Define late_night_hours outside the function as well for the time of day skip rate calculation
+late_night_hours = [22, 23, 0, 1, 2]
+
 
 # --- Overall Data Metrics ---
 st.header('Overall Streaming Metrics') # Changed header text
@@ -238,7 +241,7 @@ with col_metrics:
 
 # --- Top Lists ---
 st.header('Top Lists (within selected period)')
-col_top_songs, col_top_artists, col_top_genres = st.columns(3)
+col_top_songs, col_top_artists, col_top_albums = st.columns(3)
 
 with col_top_songs:
     st.subheader('Top Songs')
@@ -260,17 +263,15 @@ with col_top_artists:
     else:
         st.write("No data available to show top artists.")
 
-with col_top_genres:
-    st.subheader('Top Genres (Requires Genre Data)')
-    st.write("Genre data is not available in this dataset.")
-    st.write("Analysis of top genres would require an external data source mapping tracks/artists to genres.")
-    # Placeholder for genre data if it were available
-    # if 'genre' in df_filtered.columns:
-    #     top_genres = df_filtered['genre'].value_counts().reset_index()
-    #     top_genres.columns = ['Genre', 'Stream Count']
-    #     st.dataframe(top_genres.head(10))
-    # else:
-    #     st.write("Genre data is not available in this dataset.")
+with col_top_albums:
+    st.subheader('Top Albums')
+    if not df_filtered.empty:
+        # Assuming 'album_name' is the column for album names
+        top_albums = df_filtered['album_name'].value_counts().reset_index()
+        top_albums.columns = ['Album Name', 'Stream Count']
+        st.dataframe(top_albums.head(10), hide_index=True) # Display top 10 as a dataframe
+    else:
+        st.write("No data available to show top albums.")
 
 
 # --- Streams by Time of Day Chart ---
@@ -308,6 +309,9 @@ if not df_filtered.empty:
     skipped_df_filtered = df_filtered[df_filtered['skipped'] == True].copy()
     # Check if skipped_df_filtered is not empty before creating 'ms_played_bin'
     if not skipped_df_filtered.empty:
+        # Define bins and labels for ms_played outside the if block so they are accessible
+        bins = [0, 30000, 60000, float('inf')]
+        labels = ['<30s', '30s-60s', '>60s']
         skipped_df_filtered['ms_played_bin'] = pd.cut(skipped_df_filtered['ms_played'], bins=bins, labels=labels, right=False)
         skipped_bin_counts = skipped_df_filtered['ms_played_bin'].value_counts()
         total_skipped_streams_filtered = len(skipped_df_filtered)
@@ -322,6 +326,12 @@ if not df_filtered.empty:
 
     platform_skipped_counts = skipped_df_filtered['platform'].value_counts() if not skipped_df_filtered.empty else pd.Series()
     platform_skipped_proportions = (platform_skipped_counts / total_skipped_streams_filtered) * 100 if total_skipped_streams_filtered > 0 else pd.Series()
+
+    # Need to recalculate median_stream_count and artist_frequency for the filtered data
+    artist_stream_counts_filtered = df_filtered['artist_name'].value_counts()
+    median_stream_count_filtered = artist_stream_counts_filtered.median()
+    frequent_artists_filtered = artist_stream_counts_filtered[artist_stream_counts_filtered >= median_stream_count_filtered].index
+    df_filtered['artist_frequency'] = df_filtered['artist_name'].apply(lambda x: 'Frequent' if x in frequent_artists_filtered else 'Infrequent')
 
     skip_rate_by_artist_frequency = df_filtered.groupby('artist_frequency')['skipped'].value_counts(normalize=True).unstack() * 100 if not df_filtered.empty else pd.DataFrame()
     skip_rate_by_artist_frequency_plot_data = pd.DataFrame()
