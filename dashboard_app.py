@@ -291,7 +291,7 @@ with col_time_chart:
         # Calculate total streams per time of day category for the filtered data
         streams_by_time_of_day = streams_by_hour_df.groupby('Time of Day')['Stream Count'].sum().reindex(['Morning', 'Afternoon', 'Evening', 'Late Night']) # Ensure consistent order
 
-        # Create the bar chart - Adjusted figure size
+        # Create the bar chart - Adjusted figure size and font sizes
         fig_time, ax_time = plt.subplots(figsize=(4.5, 3.5)) # Match model evaluation chart size
         sns.barplot(x=streams_by_time_of_day.index, y=streams_by_time_of_day.values, palette='Greens_r', ax=ax_time)
         ax_time.set_title('Total Streams by Time of Day', fontsize=10) # Reduced font size
