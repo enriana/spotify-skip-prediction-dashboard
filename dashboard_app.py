@@ -239,6 +239,7 @@ with col_metrics:
     with col5:
         st.metric("Total Unique Artists", f"{total_unique_artists:,}")
 
+
 # --- Top Lists & Streams by Time of Day ---
 st.header('Top Lists and Streams by Time of Day (within selected period)') # Combined header
 # Adjusted column ratios for top lists and time chart to 3/4 and 1/4
@@ -470,6 +471,47 @@ with eda_plot_col4:
          st.write("Skip rate data for artist frequency not available for the selected period.")
 
 
+# --- Top/Lowest Skipped Artists ---
+st.header('Top/Lowest Skipped Artists (within selected period)') # New header for artist lists
+col_lowest_artists, col_highest_artists = st.columns(2) # Two columns for the lists
+
+with col_lowest_artists:
+    st.subheader('Top 10 Lowest Skipped Artists')
+    if not df_filtered.empty:
+        # Calculate the total number of streams for each artist in the filtered data
+        artist_stream_counts_filtered = df_filtered['artist_name'].value_counts()
+
+        # Calculate the number of skipped streams for each artist in the filtered data
+        artist_skipped_counts_filtered = df_filtered[df_filtered['skipped'] == True]['artist_name'].value_counts()
+
+        # Calculate the skip rate for each artist in the filtered data
+        # Use .reindex(artist_stream_counts_filtered.index).fillna(0) to ensure all artists are included
+        artist_skip_rates_filtered = (artist_skipped_counts_filtered / artist_stream_counts_filtered).reindex(artist_stream_counts_filtered.index).fillna(0) * 100
+
+        # Sort artists by skip rate in ascending order (lowest skip rate first)
+        lowest_skipped_artists_filtered = artist_skip_rates_filtered.sort_values(ascending=True)
+
+        # Display the top 10 artists with the lowest skipped rate as a dataframe
+        st.dataframe(lowest_skipped_artists_filtered.head(10).reset_index().rename(columns={'index': 'Artist Name', 'count': 'Skip Rate (%)'}), hide_index=True) # Changed 'count' to 'Skip Rate (%)'
+
+    else:
+        st.write("No data available to show lowest skipped artists for the selected period.")
+
+
+with col_highest_artists:
+    st.subheader('Top 10 Highest Skipped Artists')
+    if not df_filtered.empty:
+        # The artist_skip_rates_filtered is already calculated in the lowest skipped artists section
+
+        # Sort artists by skip rate in descending order (highest skip rate first)
+        highest_skipped_artists_filtered = artist_skip_rates_filtered.sort_values(ascending=False)
+
+        # Display the top 10 artists with the highest skipped rate as a dataframe
+        st.dataframe(highest_skipped_artists_filtered.head(10).reset_index().rename(columns={'index': 'Artist Name', 'count': 'Skip Rate (%)'}), hide_index=True) # Changed 'count' to 'Skip Rate (%)'
+    else:
+        st.write("No data available to show highest skipped artists for the selected period.")
+
+
 # Create main columns for the layout - Adjusted columns for insights and model evaluation
 col_insights_recs, col_model_eval = st.columns([1, 1]) # Adjusted ratios as needed
 
@@ -482,6 +524,7 @@ with col_insights_recs:
     - Infrequent artists have higher skip rate.
     - Android platform accounts for high skipped proportion.
     - Reasons (start/end) and user actions (fwdbtn, backbtn) influence skips.
+    - Significant variation in artist skip rates (some low, some high).
     """)
 
     # Business Recommendations Section
@@ -492,6 +535,7 @@ with col_insights_recs:
     3.  **Enhance Artist Discovery:** Refine artist recommendation algorithms to better introduce new or less-frequent artists that align with the user's taste, addressing the higher skip rate for infrequent artists and their potential importance in the model. Ensure a balance between familiar and new content.
     4.  **Investigate Android Platform Experience:** Conduct a deeper analysis of the Android app's performance, UI/UX, and potential technical glitches that might be contributing to the high proportion of skipped streams originating from this platform. Address any identified frictions, as platform features are often important predictors.
     5.  **Analyze Skip Triggers:** Further investigate streams initiated by autoplay or ending with fwdbtn/backbtn to understand the specific contexts or track characteristics that trigger these user actions, as reason start/end features are also important.
+    6.  **Personalize Artist Recommendations:** Leverage the insight on artist skip rate variation to tailor recommendations. Consider promoting artists with low skip rates for this user more often, while carefully introducing or improving the context for artists with high skip rates.
     """)
 
 with col_model_eval:
