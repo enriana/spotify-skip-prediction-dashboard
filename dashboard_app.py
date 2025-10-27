@@ -365,10 +365,10 @@ with eda_plot_col1:
     st.subheader('1. Play Duration')
     st.write('Duration analysis.')
     if not skipped_bin_proportions.empty: # Check if data is available after filtering
-        st.write("Skipped streams by duration bin:")
+        st.write("Skipped streams by duration:")
         fig, ax = plt.subplots(figsize=(4, 3)) # Adjusted size for 1/4 column
         sns.barplot(x=skipped_bin_proportions.index, y=skipped_bin_proportions.values, palette='Greens_r', ax=ax) # Use Green palette
-        ax.set_title('Skipped Streams by ms_played Bin', fontsize=10) # Adjusted font size
+        ax.set_title('Skipped Streams by Duration', fontsize=10) # Adjusted font size
         ax.set_xlabel('Milliseconds Played Bin', fontsize=8) # Adjusted font size
         ax.set_ylabel('Proportion (%)', fontsize=8) # Adjusted font size
         plt.xticks(fontsize=7) # Adjusted tick font size
