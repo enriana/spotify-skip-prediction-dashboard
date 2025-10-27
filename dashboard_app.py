@@ -471,8 +471,8 @@ with eda_plot_col4:
          st.write("Skip rate data for artist frequency not available for the selected period.")
 
 
-# --- Top/Lowest Skipped Artists ---
-st.header('Top/Lowest Skipped Artists (within selected period)') # New header for artist lists
+# --- Highest/Lowest Skipped Artists ---
+st.header('Highest/Lowest Skipped Artists (within selected period)') # New header for artist lists
 col_lowest_artists, col_highest_artists = st.columns(2) # Two columns for the lists
 
 with col_lowest_artists:
