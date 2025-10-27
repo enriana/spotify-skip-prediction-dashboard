@@ -489,7 +489,7 @@ with col_lowest_artists:
         artist_skip_rates_filtered = (artist_skipped_counts_filtered / artist_stream_counts_filtered).reindex(artist_stream_counts_filtered.index).fillna(0) * 100
 
          # Create a DataFrame with correct column names before displaying
-        lowest_skipped_artists_df = lowest_skipped_artists_filtered.head(10).reset_index()
+        lowest_skipped_artists_df = artist_skip_rates_filtered.head(10).reset_index()
         lowest_skipped_artists_df.columns = ['Artist Name', 'Skip Rate (%)']
 
         # Display the top 10 artists with the lowest skipped rate as a dataframe
