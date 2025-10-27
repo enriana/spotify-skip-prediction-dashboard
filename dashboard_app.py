@@ -488,11 +488,12 @@ with col_lowest_artists:
         # Use .reindex(artist_stream_counts_filtered.index).fillna(0) to ensure all artists are included
         artist_skip_rates_filtered = (artist_skipped_counts_filtered / artist_stream_counts_filtered).reindex(artist_stream_counts_filtered.index).fillna(0) * 100
 
-        # Sort artists by skip rate in ascending order (lowest skip rate first)
-        lowest_skipped_artists_filtered = artist_skip_rates_filtered.sort_values(ascending=True)
+         # Create a DataFrame with correct column names before displaying
+        lowest_skipped_artists_df = lowest_skipped_artists_filtered.head(10).reset_index()
+        lowest_skipped_artists_df.columns = ['Artist Name', 'Skip Rate (%)']
 
         # Display the top 10 artists with the lowest skipped rate as a dataframe
-        st.dataframe(lowest_skipped_artists_filtered.head(10).reset_index().rename(columns={'index': 'Artist Name', 'count': 'Skip Rate (%)'}), hide_index=True) # Changed 'count' to 'Skip Rate (%)'
+        st.dataframe(lowest_skipped_artists_df, hide_index=True)
 
     else:
         st.write("No data available to show lowest skipped artists for the selected period.")
@@ -506,8 +507,12 @@ with col_highest_artists:
         # Sort artists by skip rate in descending order (highest skip rate first)
         highest_skipped_artists_filtered = artist_skip_rates_filtered.sort_values(ascending=False)
 
+        # Create a DataFrame with correct column names before displaying
+        highest_skipped_artists_df = highest_skipped_artists_filtered.head(10).reset_index()
+        highest_skipped_artists_df.columns = ['Artist Name', 'Skip Rate (%)']
+        
         # Display the top 10 artists with the highest skipped rate as a dataframe
-        st.dataframe(highest_skipped_artists_filtered.head(10).reset_index().rename(columns={'index': 'Artist Name', 'count': 'Skip Rate (%)'}), hide_index=True) # Changed 'count' to 'Skip Rate (%)'
+        st.dataframe(highest_skipped_artists_df, hide_index=True)
     else:
         st.write("No data available to show highest skipped artists for the selected period.")
 
